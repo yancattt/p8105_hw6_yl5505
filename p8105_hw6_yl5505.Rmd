@@ -261,3 +261,20 @@ model1_data = summary(model1)|>
 
 model1_data 
 ```
+
+### Model 2:Head circumference, length, sex, and all interactions (including the three-way interaction)
+```{r}
+model2 = lm(
+  bwt ~ bhead + blength + babysex +
+    bhead * blength + blength * babysex + babysex * bhead + 
+    bhead * blength * babysex,
+  data = birthweight
+)
+
+model2_data = summary(model2)|>
+  broom::tidy() |> 
+  knitr::kable(digits = 3)
+
+model2_data
+
+```
