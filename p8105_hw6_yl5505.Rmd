@@ -106,6 +106,7 @@ log_b0b1_plot = bootstrap_results |>
 r2_plot + log_b0b1_plot
 
 ```
+
 ### 95% CIs
 ```{r}
 ci_r_squared = quantile(bootstrap_results$r_squared, probs = c(0.025, 0.975))
@@ -116,6 +117,44 @@ ci_log_b0b1
 
 ```
 
+# Problem 2
 
+### Data cleaning
+```{r}
+homicide = read.csv("./homicide-data.csv") |>
+  janitor::clean_names() |>
+  mutate(
+    city_state = paste(city, state, sep = ", "),
+    arrest = ifelse(disposition %in% c("Closed by arrest", "Closed without arrest"), 1, 0),
+    victim_age = as.numeric(victim_age)
+  ) |>
+  filter(
+    !city_state %in% c("Dallas, TX", "Phoenix, AZ", "Kansas City, MO", "Tulsa, AL"),
+    victim_race %in% c("White", "Black")
+  )
+```
 
+### logistic regression for Baltimore
+
+```{r}
+baltimore = homicide |>
+  filter(city_state == "Baltimore, MD")
+
+baltimore_model = glm(
+  arrest ~ victim_age + victim_sex + victim_race, 
+  data = baltimore, 
+  family = binomial()
+)
+
+baltimore_results = broom::tidy(baltimore_model) |>
+  filter(term == "victim_sexMale") |>
+  mutate(
+    OR = exp(estimate), 
+    CI_lower = exp(estimate - 1.96 * std.error),  
+    CI_upper = exp(estimate + 1.96 * std.error) 
+  )
+
+baltimore_results
+
+```
 
