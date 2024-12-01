@@ -278,3 +278,39 @@ model2_data = summary(model2)|>
 model2_data
 
 ```
+
+## Cross Validation
+```{r}
+set.seed(123)
+cv_df = crossv_mc(birthweight, 100) |> 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)
+  ) |> 
+  mutate(
+    my_model = map(train, ~ lm(bwt ~ gaweeks + blength + babysex + wtgain, data = .x)),
+    model1_mod = map(train, ~ lm(bwt ~ blength + gaweeks, data = .x)),
+    model2_mod = map(train, ~ lm(
+      bwt ~ bhead + blength + babysex +
+        bhead * blength + blength * babysex + babysex * bhead +
+        bhead * blength * babysex, 
+      data = .x))
+  ) |> 
+  mutate(
+    rmse_my = map2_dbl(my_model, test, ~ rmse(model = .x, data = .y)),
+    rmse_model1 = map2_dbl(model1_mod, test, ~ rmse(model = .x, data = .y)),
+    rmse_model2 = map2_dbl(model2_mod, test, ~ rmse(model = .x, data = .y))
+  )
+```
+
+```{r}
+cv_summary = cv_df |> 
+  summarise(
+    mean_rmse_my = mean(rmse_my),
+    mean_rmse_model1 = mean(rmse_model1),
+    mean_rmse_model2 = mean(rmse_model2)
+  )
+
+cv_summary
+```
+* Model 2 has the lowest RMSE (288.38), indicating it provides the best predictive accuracy among the three models.
