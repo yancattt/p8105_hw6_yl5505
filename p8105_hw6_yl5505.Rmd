@@ -102,7 +102,6 @@ log_b0b1_plot = bootstrap_results |>
     y = "Frequency"
   )
 
-# Combine plots using patchwork
 r2_plot + log_b0b1_plot
 
 ```
@@ -125,7 +124,7 @@ homicide = read.csv("./homicide-data.csv") |>
   janitor::clean_names() |>
   mutate(
     city_state = paste(city, state, sep = ", "),
-    arrest = ifelse(disposition %in% c("Closed by arrest", "Closed without arrest"), 1, 0),
+    resolved = ifelse(disposition %in% c("Closed by arrest", "Closed without arrest"), 1, 0),
     victim_age = as.numeric(victim_age)
   ) |>
   filter(
@@ -141,7 +140,7 @@ baltimore = homicide |>
   filter(city_state == "Baltimore, MD")
 
 baltimore_model = glm(
-  arrest ~ victim_age + victim_sex + victim_race, 
+  resolved ~ victim_age + victim_sex + victim_race, 
   data = baltimore, 
   family = binomial()
 )
@@ -159,9 +158,6 @@ baltimore_results
 
 ```
 
-
-
-
 ### each city
 ```{r}
 city = homicide |>
@@ -169,7 +165,7 @@ city = homicide |>
   nest() |>
   mutate(
     model = map(data, ~ glm(
-      arrest ~ victim_age + victim_sex + victim_race, 
+      resolved ~ victim_age + victim_sex + victim_race, 
       data = .x, 
       family = binomial()
     )),
@@ -187,5 +183,25 @@ city = homicide |>
 
 city
 
+```
+
+## PLOT
+```{r}
+
+city |>
+  arrange(OR) |>
+  ggplot(aes(
+    y = fct_reorder(city_state, OR),  
+    x = OR, 
+    xmin = CI_lower, 
+    xmax = CI_upper
+  )) +
+  geom_pointrange() +
+  labs(
+    title = "Adjusted Odds Ratios (Male vs Female Victims) by City",
+    x = "Odds Ratio (Male vs Female Victims)",
+    y = "City"
+  )
+  
 ```
 
