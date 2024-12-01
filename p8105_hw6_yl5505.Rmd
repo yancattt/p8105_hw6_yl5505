@@ -249,3 +249,15 @@ ggplot(birthweight, aes(x = pred, y = resid)) +
 * The proposed model predicts birthweight using four key variables: gestational age, birth length, baby’s sex, and mother’s weight gain during pregnancy. These variables were selected based on their biological relevance to birthweight. 
 * The model provides a reasonable fit, and shows no major violations of linear regression assumptions.a few outliers suggest that additional refinement may improve its predictive performance.
 
+## Comparsion
+
+### Model 1: Length at birth and gestational age
+```{r}
+model1 = lm(bwt ~ blength + gaweeks, data = birthweight)
+
+model1_data = summary(model1)|>
+  broom::tidy() |> 
+  knitr::kable(digits = 3)
+
+model1_data 
+```
