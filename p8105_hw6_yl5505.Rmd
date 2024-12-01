@@ -9,8 +9,8 @@ output: github_document
 library(tidyverse)
 library(ggplot2)
 library(readxl)
-library(rvest)
 library(patchwork)
+library(modelr)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -204,4 +204,48 @@ city |>
   )
   
 ```
+- The plot shows adjusted odds ratios comparing male and female victims across cities. Cities like Fresno, CA, and Minneapolis, MN, have ORs above 1, indicating higher male victimization odds, while cities like New York, NY, and Long Beach, CA, have ORs below 1, suggesting lower odds for males. Confidence intervals crossing 1 suggest no significant gender difference in some cities.
+
+# Problem 3
+
+### Load and Clean
+```{r}
+birthweight = read.csv("./birthweight.csv") |>
+  janitor::clean_names() |>
+  mutate(
+    babysex = factor(babysex),
+    malform = factor(malform),
+    mrace = factor(mrace),
+    frace = factor(frace)
+  ) |>
+  drop_na()
+
+summary(birthweight)
+```
+
+## buliding model
+```{r}
+birthweight_model = lm(
+  bwt ~ gaweeks + blength + babysex + wtgain,
+  data = birthweight)
+ 
+```
+## Plot Residuals
+```{r}
+birthweight = birthweight |>
+  add_predictions(birthweight_model) |>
+  add_residuals(birthweight_model)
+
+ggplot(birthweight, aes(x = pred, y = resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Residuals vs Fitted Values",
+    x = "Fitted Values",
+    y = "Residuals"
+  ) 
+```
+
+* The proposed model predicts birthweight using four key variables: gestational age, birth length, baby’s sex, and mother’s weight gain during pregnancy. These variables were selected based on their biological relevance to birthweight. 
+* The model provides a reasonable fit, and shows no major violations of linear regression assumptions.a few outliers suggest that additional refinement may improve its predictive performance.
 
