@@ -80,7 +80,7 @@ bootstrap_results = bootstrap_results |>
   unnest(model_results)
 
 ```
-### Plot
+### Plot(with help)
 ```{r}
 # Plot R^2 distribution
 r2_plot = bootstrap_results |>
@@ -152,9 +152,40 @@ baltimore_results = broom::tidy(baltimore_model) |>
     OR = exp(estimate), 
     CI_lower = exp(estimate - 1.96 * std.error),  
     CI_upper = exp(estimate + 1.96 * std.error) 
-  )
+  )|>
+    select(OR, CI_lower, CI_upper)
 
 baltimore_results
+
+```
+
+
+
+
+### each city
+```{r}
+city = homicide |>
+  group_by(city_state) |>
+  nest() |>
+  mutate(
+    model = map(data, ~ glm(
+      arrest ~ victim_age + victim_sex + victim_race, 
+      data = .x, 
+      family = binomial()
+    )),
+    results = map(model, ~ broom::tidy(.x) |>
+                    filter(term == "victim_sexMale") |>
+                    mutate(
+                      OR = exp(estimate), 
+                      CI_lower = exp(estimate - 1.96 * std.error), 
+                      CI_upper = exp(estimate + 1.96 * std.error)
+  ) |>
+    select(OR, CI_lower, CI_upper))
+  ) |>
+  select(city_state, results) |>
+  unnest(results)
+
+city
 
 ```
 
